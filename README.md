@@ -1,12 +1,18 @@
 # opentui-math
 
-Beautiful LaTeX math for [OpenTUI](https://opentui.com/), with both a universal cell renderer and a
-high-resolution graphics renderer.
+[![npm](https://img.shields.io/npm/v/opentui-math?color=cb3837)](https://www.npmjs.com/package/opentui-math)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/neriousy/opentui-math/blob/main/LICENSE)
+[![OpenTUI](https://img.shields.io/badge/OpenTUI-%3E%3D0.4.5-8b5cf6)](https://opentui.com/)
 
-The universal renderer parses LaTeX into a baseline-aware box tree and paints it directly into OpenTUI's native cell
-buffer. The graphics renderer uses MathJax's New Computer Modern vector glyphs, rasterizes them with resvg, and places
-the antialiased image through the Kitty graphics protocol. It automatically falls back to the cell renderer when
-graphics are unavailable.
+Beautiful LaTeX math rendering for [OpenTUI](https://opentui.com/).
+
+`opentui-math` includes two complementary renderers:
+
+- A universal Unicode cell renderer that works in every terminal supported by OpenTUI.
+- A high-resolution MathJax renderer for Kitty-compatible terminal graphics, with automatic cell fallback.
+
+It supports intrinsic Yoga layout, live updates, React and Solid elements, standalone string/SVG/PNG rendering, and
+partial LaTeX arriving from an AI or network stream.
 
 ```text
            ╭────────
@@ -15,129 +21,26 @@ x = ─────────────────
            2a
 ```
 
-## Install
+## Installation
+
+Install the package with OpenTUI:
+
+```sh
+npm install opentui-math @opentui/core
+```
 
 ```sh
 bun add opentui-math @opentui/core
 ```
 
-The package name is reserved for the standalone community package; it is not part of the official OpenTUI
-monorepo. The repositories are siblings during development:
-
-```text
-programming/
-├── opentui/
-└── opentui-latex/
+```sh
+pnpm add opentui-math @opentui/core
 ```
 
-## High-resolution graphics
+Requires OpenTUI 0.4.5 or newer. React and Solid integrations use the matching optional `@opentui/react` or
+`@opentui/solid` peer dependency.
 
-Use this renderer for textbook-quality curves and spacing like a browser or PDF:
-
-```ts
-import { createCliRenderer } from "@opentui/core"
-import { GraphicalLatexRenderable } from "opentui-math/graphics"
-
-const renderer = await createCliRenderer()
-const formula = new GraphicalLatexRenderable(renderer, {
-  content: String.raw`\frac{x\sqrt{3}}{(x-3)^2}`,
-  foregroundColor: "#f4f4f5",
-  fontSize: 36,
-})
-
-renderer.root.add(formula)
-```
-
-`graphicsMode: "auto"` is the default. It uses high-resolution output when OpenTUI detects Kitty graphics and no
-terminal multiplexer is in the way; otherwise the same component renders its Unicode fallback. Set
-`graphicsMode: "cells"` to force the fallback or `"kitty"` to force graphics when capability detection is
-unavailable.
-
-For React, register `<latexImage>` from the graphics entry point:
-
-```tsx
-import { createRoot } from "@opentui/react"
-import { registerGraphicalLatex } from "opentui-math/graphics/react"
-
-registerGraphicalLatex()
-
-createRoot(renderer).render(
-  <latexImage
-    content={String.raw`\int_0^\infty e^{-x^2}\,dx = \frac{\sqrt{\pi}}{2}`}
-    fontSize={32}
-    foregroundColor="#cdd6f4"
-  />,
-)
-```
-
-The Solid entry point is `opentui-math/graphics/solid` and registers the same `<latexImage>` element.
-
-You can also create SVG or PNG output without a TUI:
-
-```ts
-import { renderLatexToPng, renderLatexToSvg } from "opentui-math/graphics"
-
-const svg = await renderLatexToSvg(String.raw`E = mc^2`)
-const { png, width, height } = await renderLatexToPng(String.raw`E = mc^2`, {
-  fontSize: 48,
-  pixelRatio: 2,
-})
-```
-
-Kitty images use a stable cell footprint. When the terminal font is zoomed, the same placement cells become physically
-larger and the formula grows with them. `pixelRatio` controls raster sharpness without changing that logical footprint.
-
-## Streaming AI output
-
-AI responses arrive as incomplete prefixes, so assigning every token directly to `content` causes parse-error flicker
-and can start far more image renders than necessary. `LatexStreamController` accumulates deltas, coalesces updates for
-75 ms by default, rejects incomplete intermediate prefixes, and waits for the newest graphical render when you flush
-or finish:
-
-```ts
-import {
-  GraphicalLatexRenderable,
-  LatexStreamController,
-} from "opentui-math/graphics"
-
-const formula = new GraphicalLatexRenderable(renderer, {
-  content: "",
-  fallback: "source",
-  foregroundColor: "#a6e3a1",
-})
-renderer.root.add(formula)
-
-const stream = new LatexStreamController(formula)
-for await (const latexDelta of latexDeltas) {
-  stream.append(latexDelta)
-}
-
-const result = await stream.finish()
-if (!result.applied) console.error(result.error)
-```
-
-The default `incompletePolicy: "retain"` keeps the last valid formula visible. `completeLatexPrefix` can instead build a
-temporary preview by closing open arguments, `\left` delimiters, and environments. It never changes the accumulated
-source. Prefixes that cannot be repaired can still appear as raw text by combining `incompletePolicy: "apply"` with
-`fallback: "source"`:
-
-```ts
-import { completeLatexPrefix } from "opentui-math/graphics"
-
-const stream = new LatexStreamController(formula, {
-  incompletePolicy: "apply",
-  preview: completeLatexPrefix,
-  updateIntervalMs: 25,
-  validationOptions: { strict: true },
-})
-```
-
-Run `bun run demo:stream` to see a fast stream grow from an invalid `\beg` fragment into an aligned matrix,
-determinant, derivative, and limit. Repairable partial expressions render immediately; the exact final LaTeX replaces
-the preview when complete. Feed the controller only the LaTeX payload; if a model returns prose or Markdown fences,
-extract the contents of `$...$`, `$$...$$`, `\(...\)`, or `\[...\]` first.
-
-## Universal cell renderer
+## Quick start
 
 ```ts
 import { createCliRenderer } from "@opentui/core"
@@ -153,8 +56,107 @@ const formula = new LatexRenderable(renderer, {
 renderer.root.add(formula)
 ```
 
-The renderable has intrinsic Yoga dimensions. Set `width` or `height` when you want a larger centered region.
-Changing `formula.content` reparses, remeasures, and repaints it.
+The renderable measures itself through Yoga. Changing `formula.content` reparses, remeasures, and repaints the same
+component:
+
+```ts
+formula.content = String.raw`\lim_{n\to\infty}\left(1+\frac{1}{n}\right)^n=e`
+```
+
+## High-resolution graphics
+
+Use `GraphicalLatexRenderable` for antialiased New Computer Modern glyphs and browser-quality math spacing:
+
+```ts
+import { createCliRenderer } from "@opentui/core"
+import { GraphicalLatexRenderable } from "opentui-math/graphics"
+
+const renderer = await createCliRenderer()
+const formula = new GraphicalLatexRenderable(renderer, {
+  content: String.raw`\int_0^\infty e^{-x^2}\,dx = \frac{\sqrt{\pi}}{2}`,
+  foregroundColor: "#f4f4f5",
+  fontSize: 36,
+})
+
+renderer.root.add(formula)
+await formula.whenGraphicsReady()
+```
+
+The default `graphicsMode: "auto"` uses Kitty graphics when supported and falls back to Unicode cells everywhere else.
+Use `"kitty"` to force graphics or `"cells"` to force the universal renderer.
+
+Known compatible graphics terminals include:
+
+| Terminal | High-resolution mode |
+| --- | --- |
+| Ghostty | Yes |
+| Kitty | Yes |
+| WezTerm | Yes |
+| Other terminals | Automatic cell fallback |
+| tmux, Zellij, or GNU Screen | Cell fallback |
+
+Kitty images retain a stable cell footprint. Zooming the terminal font therefore enlarges the formula along with the
+rest of the interface. `pixelRatio` increases raster sharpness without changing that logical size.
+
+### SVG and PNG output
+
+The graphics entry point can render without a TUI:
+
+```ts
+import { writeFile } from "node:fs/promises"
+import { renderLatexToPng, renderLatexToSvg } from "opentui-math/graphics"
+
+const svg = await renderLatexToSvg(String.raw`E = mc^2`)
+const image = await renderLatexToPng(String.raw`\sqrt{x^2+y^2}`, {
+  fontSize: 48,
+  pixelRatio: 2,
+})
+
+await writeFile("formula.png", image.png)
+```
+
+## Streaming partial LaTeX
+
+AI responses and network streams often contain temporarily invalid prefixes. Assigning each token directly can cause
+parse-error flicker and unnecessary image renders.
+
+`LatexStreamController` coalesces deltas and can temporarily close open arguments, `\left` delimiters, and environments
+without altering the accumulated source:
+
+```ts
+import {
+  completeLatexPrefix,
+  GraphicalLatexRenderable,
+  LatexStreamController,
+} from "opentui-math/graphics"
+
+const formula = new GraphicalLatexRenderable(renderer, {
+  content: "",
+  fallback: "source",
+  strict: true,
+  foregroundColor: "#a6e3a1",
+})
+renderer.root.add(formula)
+
+const stream = new LatexStreamController(formula, {
+  incompletePolicy: "apply",
+  preview: completeLatexPrefix,
+  updateIntervalMs: 25,
+  validationOptions: { strict: true },
+})
+
+for await (const latexDelta of latexDeltas) {
+  stream.append(latexDelta)
+}
+
+const result = await stream.finish()
+if (!result.applied) console.error(result.error)
+```
+
+An unrepairable fragment such as `\beg` is shown as source. A repairable prefix such as `\frac{1}{` is rendered using a
+temporary `\frac{1}{}` preview. Once the stream is complete, the exact received LaTeX replaces the preview.
+
+The default `incompletePolicy: "retain"` keeps the previous valid formula instead of displaying raw invalid source.
 
 ## React
 
@@ -174,6 +176,9 @@ createRoot(renderer).render(
 )
 ```
 
+For high-resolution React output, import `registerGraphicalLatex` from `opentui-math/graphics/react` and render
+`<latexImage>`.
+
 ## Solid
 
 ```tsx
@@ -185,14 +190,20 @@ registerLatex()
 render(() => <latex content={String.raw`\int_0^\infty e^{-x}\,dx = 1`} />, renderer)
 ```
 
-## Pure renderer
+The high-resolution Solid entry point is `opentui-math/graphics/solid`.
 
-The parser and layout engine are useful without a running TUI:
+## Pure cell renderer
+
+The parser and layout engine also work without a running TUI:
 
 ```ts
 import { renderLatexToString } from "opentui-math"
 
-console.log(renderLatexToString(String.raw`\begin{pmatrix}a & b \\ c & d\end{pmatrix}`))
+console.log(
+  renderLatexToString(
+    String.raw`\begin{pmatrix}a & b \\ c & d\end{pmatrix}`,
+  ),
+)
 ```
 
 ```text
@@ -201,71 +212,94 @@ console.log(renderLatexToString(String.raw`\begin{pmatrix}a & b \\ c & d\end{pma
 ⎝c d⎠
 ```
 
-`renderLatex()` returns `{ width, height, baseline, cells, toString() }` for testing or custom composition.
+`renderLatex()` returns `{ width, height, baseline, cells, toString() }` for testing and custom composition.
+
+## Package entry points
+
+| Import | Purpose |
+| --- | --- |
+| `opentui-math` | Cell parser, layout, renderer, renderable, and streaming |
+| `opentui-math/react` | React `<latex>` registration |
+| `opentui-math/solid` | Solid `<latex>` registration |
+| `opentui-math/graphics` | High-resolution renderable and SVG/PNG functions |
+| `opentui-math/graphics/react` | React `<latexImage>` registration |
+| `opentui-math/graphics/solid` | Solid `<latexImage>` registration |
 
 ## Options
+
+### Cell renderer
 
 | Option | Default | Purpose |
 | --- | --- | --- |
 | `content` | `""` | LaTeX math source |
 | `foregroundColor` | `#e8e8f0` | Formula color |
 | `backgroundColor` | transparent | Formula background |
-| `displayMode` | `true` | Put limits above/below large operators |
+| `displayMode` | `true` | Put limits above and below large operators |
 | `compactScripts` | `true` | Use Unicode super/subscripts when exact glyphs exist |
-| `macros` | `{}` | Expand simple command macros before parsing |
+| `macros` | `{}` | Expand lightweight user command macros |
 | `maxSourceLength` | `100000` | Reject unexpectedly large formulas |
-| `maxExpandedLength` | `maxSourceLength` | Bound output produced by user macros |
+| `maxExpandedLength` | `maxSourceLength` | Bound macro-expanded output |
 | `maxDepth` | `256` | Bound nested groups and commands |
 | `strict` | `false` | Throw on unknown commands |
-| `fallback` | `"message"` | On errors: `"message"`, `"source"`, or `"throw"` |
+| `fallback` | `"message"` | Error behavior: `"message"`, `"source"`, or `"throw"` |
 | `errorColor` | `#ff6b6b` | Fallback error color |
 
-The graphical component adds:
+### Graphics renderer
 
 | Option | Default | Purpose |
 | --- | --- | --- |
 | `graphicsMode` | `"auto"` | Choose `"auto"`, `"kitty"`, or `"cells"` |
-| `fontSize` | `32` | Math font size in pixels |
+| `fontSize` | `32` | Math font size in CSS pixels |
 | `pixelRatio` | `1` | Raster output scale |
 | `maxRasterWidth` | `8192` | Maximum allocated bitmap width |
 | `maxRasterHeight` | `8192` | Maximum allocated bitmap height |
-| `maxRasterPixels` | `16777216` | Maximum bitmap area; oversized formulas scale down |
+| `maxRasterPixels` | `16777216` | Maximum bitmap area |
 | `graphicsForegroundColor` | `foregroundColor` | CSS color used for the image |
 | `graphicsZIndex` | `1` | Kitty placement stacking order |
 
-The stream controller adds:
+### Stream controller
 
 | Option | Default | Purpose |
 | --- | --- | --- |
 | `updateIntervalMs` | `75` | Quiet period used to coalesce token deltas |
 | `maxBufferLength` | `100000` | Maximum accumulated stream length |
-| `incompletePolicy` | `"retain"` | Keep the last valid frame or apply raw incomplete source |
-| `validationOptions` | `{}` | Parser options used for intermediate completeness checks |
-| `validate` | tolerant parser | Optional custom completeness check |
+| `incompletePolicy` | `"retain"` | Retain the last frame or apply incomplete source |
+| `validationOptions` | `{}` | Parser options used for completeness checks |
+| `validate` | tolerant parser | Custom completeness check |
 | `preview` | none | Build a temporary renderable source without changing the stream |
 
 ## Supported LaTeX
 
-- Fractions, binomials, roots, superscripts, and subscripts
-- Greek letters, relations, arrows, binary operators, and large operators
-- `\left ... \right` with stretching parentheses, brackets, braces, bars, floors, and ceilings
-- `matrix`, `pmatrix`, `bmatrix`, `Bmatrix`, `vmatrix`, `Vmatrix`, `smallmatrix`, `cases`, `array`,
-  `aligned`, `align`, and `gathered` (including starred alignment forms)
-- Accents including `\hat`, `\bar`, `\vec`, `\tilde`, `\dot`, `\ddot`, `\overline`, and `\underline`
-- `\text`, named operators, `\operatorname`, `\overset`, `\underset`, and colors
-- Lightweight user macros
+- Fractions, binomials, square roots, and indexed roots
+- Superscripts, subscripts, Greek letters, relations, arrows, and binary operators
+- Integrals, sums, products, limits, derivatives, and common named operators
+- Stretching parentheses, brackets, braces, bars, floors, and ceilings
+- `matrix`, `pmatrix`, `bmatrix`, `Bmatrix`, `vmatrix`, `Vmatrix`, `smallmatrix`, `cases`, and `array`
+- `aligned`, `align`, and `gathered`, including starred alignment forms
+- Accents such as `\hat`, `\bar`, `\vec`, `\tilde`, `\dot`, `\ddot`, `\overline`, and `\underline`
+- `\text`, `\operatorname`, `\overset`, `\underset`, colors, and lightweight macros
 
-The cell backend is a math-mode renderer, not a full TeX engine: it does not compile documents, execute arbitrary TeX
-macros, load packages, or render TikZ. The graphics backend accepts the TeX input supported by MathJax. Neither backend
-shells out to a TeX installation.
+The cell backend is a math-mode renderer rather than a complete TeX engine. It does not compile documents, load
+packages, execute arbitrary TeX, or render TikZ. The graphics backend accepts the TeX input supported by MathJax.
+Neither backend shells out to a TeX installation.
 
-## Publishing
+## Development
 
 ```sh
 bun install
-bun run prepublishOnly
-npm pack --dry-run
-npm publish
+bun run test
+bun run check
+bun run build
 ```
 
-The built tarball contains only ESM JavaScript, declarations, the README, and the license.
+Run the demos in a compatible terminal:
+
+```sh
+bun run demo
+bun run demo:graphics
+bun run demo:stream
+```
+
+## License
+
+[MIT](https://github.com/neriousy/opentui-math/blob/main/LICENSE)
