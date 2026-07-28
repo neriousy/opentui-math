@@ -1,0 +1,96 @@
+{
+  "name": "opentui-math",
+  "version": "0.1.0",
+  "description": "Beautiful LaTeX math rendering for OpenTUI",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/neriousy/opentui-math.git"
+  },
+  "homepage": "https://github.com/neriousy/opentui-math#readme",
+  "bugs": {
+    "url": "https://github.com/neriousy/opentui-math/issues"
+  },
+  "keywords": [
+    "opentui",
+    "latex",
+    "math",
+    "terminal",
+    "tui",
+    "unicode"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "module": "./dist/index.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js"
+    },
+    "./solid": {
+      "types": "./dist/solid.d.ts",
+      "import": "./dist/solid.js"
+    },
+    "./graphics": {
+      "types": "./dist/graphics/index.d.ts",
+      "import": "./dist/graphics/index.js"
+    },
+    "./graphics/react": {
+      "types": "./dist/graphics/react.d.ts",
+      "import": "./dist/graphics/react.js"
+    },
+    "./graphics/solid": {
+      "types": "./dist/graphics/solid.d.ts",
+      "import": "./dist/graphics/solid.js"
+    }
+  },
+  "scripts": {
+    "build": "bun scripts/build.ts",
+    "check": "bunx tsc -p tsconfig.check.json --noEmit",
+    "test": "bun test tests/parser.test.ts tests/render.test.ts tests/renderable.test.ts tests/showcase.test.ts tests/stream.test.ts tests/graphics.test.ts",
+    "example": "bun examples/showcase.ts",
+    "demo": "bun examples/opentui.ts",
+    "preview:png": "bun examples/render-png.ts",
+    "demo:graphics": "bun examples/opentui-graphics.ts",
+    "demo:stream": "bun examples/opentui-stream.ts",
+    "prepublishOnly": "bun run test && bun run check && bun run build"
+  },
+  "peerDependencies": {
+    "@opentui/core": ">=0.4.5",
+    "@opentui/react": ">=0.4.5",
+    "@opentui/solid": ">=0.4.5"
+  },
+  "peerDependenciesMeta": {
+    "@opentui/react": {
+      "optional": true
+    },
+    "@opentui/solid": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@opentui/core": "0.4.5",
+    "@opentui/react": "0.4.5",
+    "@opentui/solid": "0.4.5",
+    "@types/bun": "latest",
+    "typescript": "^5.9.2"
+  },
+  "engines": {
+    "bun": ">=1.3.0",
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@resvg/resvg-js": "2.6.2",
+    "mathjax": "4.1.3"
+  }
+}

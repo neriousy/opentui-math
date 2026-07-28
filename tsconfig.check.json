@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@opentui/core": ["types/opentui.d.ts"],
+      "@opentui/core/testing": ["types/opentui.d.ts"],
+      "@opentui/core/yoga": ["types/opentui.d.ts"],
+      "@opentui/react": ["types/opentui.d.ts"],
+      "@opentui/solid": ["types/opentui.d.ts"],
+      "@opentui/solid/components": ["types/opentui.d.ts"]
+    }
+  },
+  "include": ["src/**/*.ts", "tests/**/*.ts", "examples/**/*.ts", "types/**/*.d.ts"]
+}

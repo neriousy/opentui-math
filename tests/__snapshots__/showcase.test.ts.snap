@@ -1,0 +1,47 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`textbook formula visual regressions quadratic 1`] = `
+"           ╭────────
+     -b ± √ b² - 4ac
+x = ─────────────────
+           2a"
+`;
+
+exports[`textbook formula visual regressions euler 1`] = `
+" iπ
+e   + 1 = 0"
+`;
+
+exports[`textbook formula visual regressions gaussian 1`] = `
+" ∞   -x²      ╭─
+∫   e   dx = √ π
+ -∞"
+`;
+
+exports[`textbook formula visual regressions matrix 1`] = `
+"    ⎛a b⎞
+A = ⎜   ⎟
+    ⎝c d⎠"
+`;
+
+exports[`textbook formula visual regressions limit 1`] = `
+"      ⎛     1 ⎞
+ lim  ⎜1 + ───⎟ⁿ = e
+n → ∞ ⎝     n ⎠"
+`;
+
+exports[`textbook formula visual regressions cases 1`] = `
+"      ⎧ x  x ≥ 0
+|x| = ⎨
+      ⎩-x  x < 0"
+`;
+
+exports[`textbook formula visual regressions maxwell 1`] = `
+"          ρ
+∇ · E  = ────
+          ϵ₀
+
+                     ∂E
+∇ × B  = μ₀J + μ₀ϵ₀ ────
+                     ∂t"
+`;
