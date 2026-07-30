@@ -4,6 +4,9 @@
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/neriousy/opentui-math/blob/main/LICENSE)
 [![OpenTUI](https://img.shields.io/badge/OpenTUI-%3E%3D0.4.5-8b5cf6)](https://opentui.com/)
 
+https://github.com/user-attachments/assets/9990a327-514b-4121-8a1e-888d8adba330
+
+
 Beautiful LaTeX math rendering for [OpenTUI](https://opentui.com/).
 
 `opentui-math` includes two complementary renderers:
